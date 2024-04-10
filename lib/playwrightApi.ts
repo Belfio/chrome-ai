@@ -11,16 +11,16 @@
 //
 //--------------------------------------------------------------------------
 
-import { Browser, Page, launch, BrowserContext } from "playwright";
-
-class PlaywrightController {
-  private browserPromise: Promise<Browser>;
-  private page: Page | null;
+const { chromium } = require("playwright");
+import fs from "fs";
+export default class PlaywrightController {
+  private browserPromise: Promise<import("playwright").Browser>;
+  private page: import("playwright").Page | null;
   private mouseXY = { x: 0, y: 0 };
-  private browser: Browser | null;
+  private browser: import("playwright").Browser | null;
   private name: string;
   constructor(name: string) {
-    this.browserPromise = launch({ headless: false });
+    this.browserPromise = chromium.launch({ headless: false });
     this.page = null;
     this.browser = null;
     this.name = name;
@@ -51,6 +51,10 @@ class PlaywrightController {
     await this.page.mouse.move(x, y);
   }
 
+  public async scroll({ x, y }: { x: number; y: number }) {
+    if (!this.page) return;
+    await this.page.mouse.wheel(x, y);
+  }
   public async click() {
     if (!this.page) return;
     const { x, y } = this.mouseXY;
@@ -62,9 +66,24 @@ class PlaywrightController {
     await this.page.keyboard.press(key);
   }
 
-  public async screenshot(path: string = this.name) {
+  public async word(word: string) {
     if (!this.page) return;
-    await this.page.screenshot({ path });
+    await this.page.keyboard.type(word);
+  }
+
+  public async takeScreenshot(path: string = this.name) {
+    if (!this.page) return;
+
+    if (!fs.existsSync("./screenshots")) {
+      fs.mkdirSync("./screenshots");
+    }
+
+    const buffer = await this.page.screenshot();
+    fs.writeFileSync(`./screenshots/${path}.png`, buffer);
+  }
+  public async getScreenshot(path: string = this.name) {
+    if (!this.page) return;
+    return "screenshot";
   }
   public async close() {
     if (!this.browser) return;

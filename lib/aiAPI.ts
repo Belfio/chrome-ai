@@ -9,3 +9,23 @@
 //
 //
 //--------------------------------------------------------------------------
+
+// now use openAi api to receive an anawer from a prompt
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env["OPENAI_API_KEY"], // This is the default and can be omitted
+});
+
+const ai = {
+  chatCompletion: async (prompt: string) => {
+    const ans = await openai.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "gpt-3.5-turbo",
+    });
+
+    return ans.choices[0].message.content;
+  },
+};
+
+export default ai;
