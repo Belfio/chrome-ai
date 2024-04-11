@@ -38,9 +38,15 @@ async function getInputPrompt(): Promise<inputPromptType> {
 
 type strategyType = string[];
 async function getStrategy(prompt: inputPromptType): Promise<strategyType> {
-  const prePrompt = `You are a smart machine that gets an instructions and creates a strategy in different steps to achieve the gola of the main prompt. You answer with an array of strings. Here is an example:
+  const prePrompt = `You are a smart machine that gets an instruction prompt and replies with a strategy split in different steps. 
+  This strategy will guide a robot that has a browser open.
+  The strategy will achieve the goal of the main prompt by using the internet browser. 
+  Don't be vague, be specific.
+  You answer with an array of strings. 
+  
+  Here is an example:
     example Prompt: "Find me the weather in Cagliari for today"
-    example Strategy: ["Open the browser", "Go to google.com", "Type in the search bar 'weather in Cagliari'", "Click on the search button", "Take a screenshot", "Analyze the screenshot to find the weather", "Answer the user with the weather"]
+    example Strategy: ["Go to google.com", "Type in the search bar 'weather in Cagliari'", "Click on the search button", "Take a screenshot", "Analyze the screenshot to find the weather", "Answer the user with the weather"]
 
 
     Prompt: ${prompt}
@@ -52,8 +58,22 @@ async function getStrategy(prompt: inputPromptType): Promise<strategyType> {
 }
 
 type stepsType = string[];
-async function getSteps(strategy: strategyType): Promise<stepsType> {
-  return "";
+async function getSteps(strategyStep: string): Promise<stepsType> {
+  const prePrompt = `You are a smart machine that gets an instruction set and creates a set of steps to achieve the instructions.
+  This strategy will guide a robot that has a browser open.
+  The strategy will achieve the goal of the main prompt by using the internet browser. 
+  Your instructions need to be super specific, so that we can translate them in mouse movements and keyboard actions. Never provide multiple choices in one step.
+  You answer with an array of strings. Here is an example:
+    example Prompt: "Go to google.com"
+    example Strategy: ["Move the mouse to the address bar", "type google.com", "Press the enter key in the keyboard"]
+
+
+    Prompt: ${strategyStep}
+    Strategy: 
+    `;
+  const ans = await ai.chatCompletion(prePrompt);
+  console.log(ans);
+  return JSON.parse(ans);
 }
 
 type commandType = {
@@ -63,14 +83,29 @@ type commandType = {
   word: string;
   action: "MOVE" | "CLICK" | "KEY" | "WORD";
 };
-function getStepToCommand(step: string): commandType {
-  return {
-    x: 0,
-    y: 0,
-    key: "",
-    word: "",
-    action: "MOVE",
-  };
+// this needs to read images! or some sort of image input / history!
+async function getStepToCommand(step: string): Promise<commandType> {
+  const prePrompt = `You are a smart translator from command to JSON object. You will get a command and you will translate it into a JSON object that can be used by the browser controller.
+    The format of the JSON object is: {x: number, y: number, key: string, word: string, action: "MOVE" | "CLICK" | "KEY" | "WORD"}
+    You will only reply with the JSON object. Here is an example:
+      example Prompt: Press Ctrl+T on the keyboard
+      example Strategy: {x: 0, y: 0, key: "Ctrl+T", word:"", action: "KEY"}
+  
+  
+      Prompt: ${step}
+      Strategy: 
+      `;
+  const ans = await ai.chatCompletion(prePrompt);
+  console.log(ans);
+  return JSON.parse(ans) as commandType;
+
+  //   return {
+  //     x: 0,
+  //     y: 0,
+  //     key: "",
+  //     word: "",
+  //     action: "MOVE",
+  //   };
 }
 
 function updateStrategy(strategy: strategyType): strategyType {
@@ -102,13 +137,17 @@ const RECURSION_LIMIT = 10;
 async function main() {
   // const inputPrompt: inputPromptType = await getInputPrompt();
   const inputPrompt =
-    "trovami il biglietto più economico da Barcellona a Londra per il 6 aprile";
+    "Get me the cheapest ticket from Barcelona to London for the 6th of April";
   console.log(inputPrompt);
   const strategy: strategyType = await getStrategy(inputPrompt);
 
   console.log(strategy);
+  const steps: stepsType = await getSteps(strategy[0]);
+  console.log(steps);
+
+  const command = getStepToCommand(steps[0]);
+  console.log(command);
   return;
-  const steps: stepsType = await getSteps(strategy);
 
   const browser = new PlaywrightController("main");
   await browser.init();
