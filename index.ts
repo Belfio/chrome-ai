@@ -145,6 +145,8 @@ async function main() {
   const steps: stepsType = await getSteps(strategy[0]);
   console.log(steps);
 
+  //   for the step it needs a screenshot
+
   const command = getStepToCommand(steps[0]);
   console.log(command);
   return;
