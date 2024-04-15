@@ -12,6 +12,9 @@
 
 // now use openAi api to receive an anawer from a prompt
 import OpenAI from "openai";
+const fetch = require("node-fetch");
+const fs = require("fs");
+const path = require("path");
 
 const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"], // This is the default and can be omitted
@@ -26,12 +29,35 @@ const ai = {
 
     return ans.choices[0].message.content;
   },
-  imageRecognition: async (image: string) => {
-    //     const ans = await openai.images.recognizeObjects({
-    //       file: image,
-    //     });
-    //     return ans;
+  imageRecognition: async (prompt: string, imagePath: string) => {
+    const base64Image = encodeImage(imagePath);
+
+    const ans = await openai.chat.completions.create({
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: prompt,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
+      model: "gpt-4-turbo",
+    });
   },
 };
 
 export default ai;
+
+function encodeImage(imagePath: string) {
+  const image = fs.readFileSync(path.resolve(imagePath));
+  return Buffer.from(image).toString("base64");
+}
