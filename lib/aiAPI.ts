@@ -26,6 +26,12 @@ const ai = {
 
     return ans.choices[0].message.content;
   },
+  imageRecognition: async (image: string) => {
+//     const ans = await openai.images.recognizeObjects({
+//       file: image,
+//     });
+//     return ans;
+//   },
 };
 
 export default ai;
