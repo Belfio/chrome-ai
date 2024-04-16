@@ -84,18 +84,21 @@ type commandType = {
   action: "MOVE" | "CLICK" | "KEY" | "WORD";
 };
 // this needs to read images! or some sort of image input / history!
-async function getStepToCommand(step: string): Promise<commandType> {
+async function getStepToCommand(
+  step: string,
+  imagePath: string
+): Promise<commandType> {
   const prePrompt = `You are a smart translator from command to JSON object. You will get a command and you will translate it into a JSON object that can be used by the browser controller.
     The format of the JSON object is: {x: number, y: number, key: string, word: string, action: "MOVE" | "CLICK" | "KEY" | "WORD"}
+    You will be given a prompt and an image.
     You will only reply with the JSON object. Here is an example:
-      example Prompt: Press Ctrl+T on the keyboard
-      example Strategy: {x: 0, y: 0, key: "Ctrl+T", word:"", action: "KEY"}
-  
+      example Strategy: {x: 0, y: 0, key: "Ctrl+T", word:"", action: "KEY"};
+      example Strategy: {x: 540px, y: 220px, key: "", word:"", action: "CLICK"}  
   
       Prompt: ${step}
       Strategy: 
       `;
-  const ans = await ai.chatCompletion(prePrompt);
+  const ans = await ai.imageRecognition(prePrompt, imagePath);
   console.log(ans);
   return JSON.parse(ans) as commandType;
 
@@ -147,7 +150,9 @@ async function main() {
 
   //   for the step it needs a screenshot
 
-  const command = getStepToCommand(steps[0]);
+  const imagePath = "./screenshots/test.png";
+
+  const command = getStepToCommand(steps[0], imagePath);
   console.log(command);
   return;
 
